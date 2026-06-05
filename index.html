@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HabitFlow — Питч-дек стартапа</title>
+  <meta name="description" content="HabitFlow — геймифицированный трекер привычек. Презентация стартапа.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* ==================== RESET & BASE ==================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; scroll-snap-type: y mandatory; }
+    body {
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      background: #06060b;
+      color: #e8e8f0;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; font-weight: 800; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ==================== SLIDE SYSTEM ==================== */
+    .slide {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 60px;
+      position: relative;
+      overflow: hidden;
+      scroll-snap-align: start;
+    }
+    .slide-inner {
+      max-width: 1100px;
+      width: 100%;
+      z-index: 2;
+      position: relative;
+    }
+
+    /* ==================== НАВИГАЦИЯ ==================== */
+    .slide-nav {
+      position: fixed;
+      right: 28px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 100;
+    }
+    .slide-nav-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .slide-nav-dot:hover { background: rgba(124,106,247,0.5); transform: scale(1.3); }
+    .slide-nav-dot.active {
+      background: #7c6af7;
+      box-shadow: 0 0 12px rgba(124,106,247,0.6);
+      transform: scale(1.3);
+    }
+    .slide-nav-dot::before {
+      content: attr(data-label);
+      position: absolute;
+      right: 22px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .slide-nav-dot:hover::before { opacity: 1; }
+
+    /* Номер слайда */
+    .slide-number {
+      position: absolute;
+      bottom: 32px;
+      left: 60px;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.15);
+      letter-spacing: 0.1em;
+      z-index: 3;
+    }
+
+    /* ==================== МЕТКА СЕКЦИИ ==================== */
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #7c6af7;
+      margin-bottom: 28px;
+    }
+    .section-label-line {
+      width: 32px;
+      height: 2px;
+      background: linear-gradient(90deg, #7c6af7, transparent);
+      border-radius: 2px;
+    }
+
+    /* ==================== ФОНОВЫЕ СВЕЧЕНИЯ ==================== */
+    .glow {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(120px);
+      opacity: 0.07;
+    }
+
+    /* ==================== АНИМАЦИИ ==================== */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInLeft {
+      from { opacity: 0; transform: translateX(-40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fadeInRight {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+    @keyframes float1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,-20px)} }
+    @keyframes float2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-15px,15px)} }
+    @keyframes countUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes typewriter {
+      from { width: 0 }
+      to { width: 100% }
+    }
+    @keyframes blink { 50% { border-color: transparent } }
+
+    .animate { animation: fadeInUp 0.8s ease forwards; }
+    .animate-left { animation: fadeInLeft 0.8s ease forwards; }
+    .animate-right { animation: fadeInRight 0.8s ease forwards; }
+    .delay-1 { animation-delay: 0.15s; opacity: 0; }
+    .delay-2 { animation-delay: 0.3s; opacity: 0; }
+    .delay-3 { animation-delay: 0.45s; opacity: 0; }
+    .delay-4 { animation-delay: 0.6s; opacity: 0; }
+
+    /* ==================== SLIDE 1: ТИТУЛЬНАЯ ==================== */
+    .slide-title-bg {
+      background: radial-gradient(ellipse at 30% 50%, rgba(124,106,247,0.08) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 80%, rgba(247,106,138,0.05) 0%, transparent 50%),
+                  #06060b;
+    }
+    .title-content { text-align: center; }
+    .title-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .title-logo-icon {
+      width: 64px; height: 64px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #7c6af7, #f76a8a);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; color: #fff;
+      box-shadow: 0 16px 48px rgba(124,106,247,0.4);
+    }
+    .title-logo-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 36px; font-weight: 800;
+      background: linear-gradient(135deg, #7c6af7, #f76a8a);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .title-headline {
+      font-size: clamp(42px, 6vw, 80px);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      margin-bottom: 28px;
+      color: #f0f0f8;
+    }
+    .title-headline .accent {
+      background: linear-gradient(135deg, #7c6af7, #f76a8a);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .title-sub {
+      font-size: clamp(16px, 2vw, 20px);
+      color: #8888aa;
+      max-width: 600px;
+      margin: 0 auto 48px;
+      line-height: 1.6;
+    }
+    .title-tags {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .title-tag {
+      padding: 10px 22px;
+      border-radius: 99px;
+      background: rgba(124,106,247,0.08);
+      border: 1px solid rgba(124,106,247,0.2);
+      font-size: 13px;
+      font-weight: 600;
+      color: #b0a0ff;
+    }
+
+    /* ==================== SLIDE 2: ПРОБЛЕМА ==================== */
+    .slide-problem-bg {
+      background: radial-gradient(ellipse at 80% 30%, rgba(247,106,138,0.06) 0%, transparent 50%),
+                  #06060b;
+    }
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .problem-headline {
+      font-size: clamp(32px, 4vw, 52px);
+      line-height: 1.15;
+      margin-bottom: 24px;
+    }
+    .problem-headline .red { color: #f76a8a; }
+    .problem-desc {
+      font-size: 16px;
+      color: #8888aa;
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+
+    /* Статистические карточки проблемы */
+    .problem-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .stat-card {
+      background: rgba(247,106,138,0.04);
+      border: 1px solid rgba(247,106,138,0.12);
+      border-radius: 16px;
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      border-color: rgba(247,106,138,0.3);
+      transform: translateX(6px);
+    }
+    .stat-icon {
+      font-size: 32px;
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      background: rgba(247,106,138,0.08);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .stat-number {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px; font-weight: 800;
+      color: #f76a8a;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: #8888aa;
+      margin-top: 2px;
+    }
+
+    /* ==================== SLIDE 3: РЕШЕНИЕ ==================== */
+    .slide-solution-bg {
+      background: radial-gradient(ellipse at 20% 60%, rgba(106,247,200,0.06) 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 40%, rgba(124,106,247,0.05) 0%, transparent 50%),
+                  #06060b;
+    }
+    .solution-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .solution-headline {
+      font-size: clamp(32px, 4vw, 52px);
+      line-height: 1.15;
+      margin-bottom: 24px;
+    }
+    .solution-headline .green { color: #6af7c8; }
+    .solution-desc {
+      font-size: 16px; color: #8888aa; line-height: 1.7; margin-bottom: 32px;
+    }
+    .solution-points { display: flex; flex-direction: column; gap: 18px; }
+    .solution-point {
+      display: flex; align-items: flex-start; gap: 16px;
+    }
+    .solution-point-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: rgba(106,247,200,0.08);
+      border: 1px solid rgba(106,247,200,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .solution-point-text h4 {
+      font-size: 15px; font-weight: 700; margin-bottom: 4px; color: #e8e8f0;
+    }
+    .solution-point-text p {
+      font-size: 13px; color: #7777aa; line-height: 1.5;
+    }
+    /* Визуал решения */
+    .solution-visual {
+      background: rgba(20,20,30,0.6);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 24px;
+      padding: 32px;
+      backdrop-filter: blur(20px);
+      position: relative;
+    }
+    .solution-visual::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(106,247,200,0.15), rgba(124,106,247,0.1), transparent);
+      z-index: -1;
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+      -webkit-mask-composite: xor;
+      padding: 1px;
+    }
+    .sv-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
+    }
+    .sv-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .sv-habit-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.04);
+      margin-bottom: 10px;
+      transition: all 0.3s ease;
+    }
+    .sv-habit-row:hover { background: rgba(255,255,255,0.04); }
+    .sv-emoji { font-size: 20px; }
+    .sv-name { flex: 1; font-size: 14px; font-weight: 600; }
+    .sv-check {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      border: 2px solid rgba(106,247,200,0.3);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.3s ease;
+    }
+    .sv-check.done {
+      background: #6af7c8;
+      border-color: #6af7c8;
+    }
+    .sv-check.done::after {
+      content: '✓'; font-size: 12px; color: #06060b; font-weight: 800;
+    }
+    .sv-xp-bar {
+      margin-top: 20px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .sv-xp-track {
+      flex: 1; height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .sv-xp-fill {
+      height: 100%;
+      width: 68%;
+      background: linear-gradient(90deg, #7c6af7, #6af7c8);
+      border-radius: 99px;
+    }
+    .sv-xp-text {
+      font-family: 'Syne'; font-size: 13px; font-weight: 700; color: #7c6af7;
+    }
+
+    /* ==================== SLIDE 4: ПРОДУКТ ==================== */
+    .slide-product-bg {
+      background: radial-gradient(ellipse at 50% 40%, rgba(124,106,247,0.06) 0%, transparent 50%),
+                  #06060b;
+    }
+    .product-headline {
+      font-size: clamp(32px, 4vw, 52px);
+      line-height: 1.15; text-align: center;
+      margin-bottom: 16px;
+    }
+    .product-sub {
+      text-align: center;
+      font-size: 16px; color: #8888aa; max-width: 600px; margin: 0 auto 56px; line-height: 1.6;
+    }
+    .product-showcase {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .product-screen {
+      background: rgba(20,20,30,0.5);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.25,0.8,0.25,1);
+    }
+    .product-screen:hover {
+      border-color: rgba(124,106,247,0.3);
+      transform: translateY(-8px);
+      box-shadow: 0 24px 64px rgba(124,106,247,0.12);
+    }
+    .product-screen-bar {
+      height: 36px;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 14px;
+    }
+    .ps-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .product-screen-body {
+      padding: 20px;
+      min-height: 240px;
+    }
+    .product-screen-title {
+      font-family: 'Syne'; font-size: 14px; font-weight: 700;
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    /* Мини-карточки внутри скрина */
+    .mini-habit {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.02);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .mini-habit-emoji { font-size: 16px; }
+    .mini-habit-name { flex: 1; }
+    .mini-check {
+      width: 18px; height: 18px;
+      border-radius: 5px;
+      background: #6af7c8;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: #06060b; font-weight: 800;
+    }
+    .mini-check.empty {
+      background: transparent;
+      border: 2px solid rgba(255,255,255,0.12);
+    }
+    .mini-check.empty::after { content: ''; }
+    .mini-check::after { content: '✓'; }
+    /* Мини-бар прогресса */
+    .mini-bar { height: 4px; background: rgba(255,255,255,0.06); border-radius: 99px; margin-top: 4px; }
+    .mini-bar-fill { height: 100%; border-radius: 99px; }
+    /* Мини чат */
+    .mini-msg {
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      max-width: 80%;
+      margin-bottom: 8px;
+    }
+    .mini-msg.incoming { background: rgba(124,106,247,0.1); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .mini-msg.outgoing { background: rgba(106,247,200,0.1); margin-left: auto; border-bottom-right-radius: 4px; }
+    /* Мини левелинг */
+    .mini-level-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0;
+      font-size: 13px;
+    }
+    .mini-level-icon { font-size: 20px; }
+    .mini-level-name { flex: 1; }
+    .mini-level-badge {
+      font-size: 10px; font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+
+    /* ==================== SLIDE 5: ФУНКЦИИ ==================== */
+    .slide-features-bg {
+      background: radial-gradient(ellipse at 60% 70%, rgba(247,196,106,0.04) 0%, transparent 50%),
+                  #06060b;
+    }
+    .features-headline {
+      font-size: clamp(32px, 4vw, 52px);
+      line-height: 1.15; text-align: center;
+      margin-bottom: 56px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .feat-card {
+      background: rgba(20,20,30,0.4);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 18px;
+      padding: 28px 24px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .feat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--feat-accent, linear-gradient(90deg, #7c6af7, #f76a8a));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .feat-card:hover { border-color: rgba(255,255,255,0.12); transform: translateY(-4px); }
+    .feat-card:hover::before { opacity: 1; }
+    .feat-icon {
+      font-size: 28px;
+      margin-bottom: 18px;
+      display: block;
+    }
+    .feat-card h3 {
+      font-size: 16px; font-weight: 700; margin-bottom: 10px;
+    }
+    .feat-card p {
+      font-size: 13px; color: #7777aa; line-height: 1.6;
+    }
+
+    /* ==================== SLIDE 6: БИЗНЕС-МОДЕЛЬ ==================== */
+    .slide-business-bg {
+      background: radial-gradient(ellipse at 30% 50%, rgba(124,106,247,0.06) 0%, transparent 50%),
+                  #06060b;
+    }
+    .business-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .business-headline {
+      font-size: clamp(32px, 4vw, 52px);
+      line-height: 1.15;
+      margin-bottom: 24px;
+    }
+    .business-desc {
+      font-size: 16px; color: #8888aa; line-height: 1.7; margin-bottom: 32px;
+    }
+    .business-model-cards {
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .bm-card {
+      background: rgba(20,20,30,0.5);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex; align-items: flex-start; gap: 18px;
+      transition: all 0.3s ease;
+    }
+    .bm-card:hover { border-color: rgba(124,106,247,0.2); transform: translateX(6px); }
+    .bm-phase {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #7c6af7, #f76a8a);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne'; font-weight: 800; font-size: 16px; color: #fff;
+      flex-shrink: 0;
+    }
+    .bm-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .bm-card p { font-size: 13px; color: #7777aa; line-height: 1.5; }
+    /* Визуал метрик */
+    .metrics-visual {
+      background: rgba(20,20,30,0.5);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      padding: 32px;
+    }
+    .metrics-visual h3 {
+      font-size: 16px; margin-bottom: 28px; text-align: center;
+    }
+    .metric-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .metric-row:last-child { border: none; }
+    .metric-label { font-size: 14px; color: #8888aa; }
+    .metric-value {
+      font-family: 'Syne'; font-weight: 800; font-size: 22px;
+      background: linear-gradient(135deg, #7c6af7, #6af7c8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    /* ==================== SLIDE 7: КОМАНДА ==================== */
+    .slide-team-bg {
+      background: radial-gradient(ellipse at 50% 50%, rgba(124,106,247,0.05) 0%, transparent 50%),
+                  #06060b;
+    }
+    .team-content { text-align: center; }
+    .team-headline {
+      font-size: clamp(32px, 4vw, 52px);
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    .team-sub {
+      font-size: 16px; color: #8888aa; max-width: 500px; margin: 0 auto 56px; line-height: 1.6;
+    }
+    .team-card {
+      max-width: 480px;
+      margin: 0 auto;
+      background: rgba(20,20,30,0.5);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 24px;
+      padding: 48px 40px;
+      text-align: center;
+      position: relative;
+    }
+    .team-card::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: -1px; right: -1px;
+      height: 4px;
+      background: linear-gradient(90deg, #7c6af7, #f76a8a, #6af7c8);
+      border-radius: 24px 24px 0 0;
+    }
+    .team-avatar {
+      width: 96px; height: 96px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7c6af7, #f76a8a);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px;
+      margin: 0 auto 24px;
+      box-shadow: 0 12px 40px rgba(124,106,247,0.3);
+    }
+    .team-name {
+      font-size: 24px; font-weight: 800; margin-bottom: 6px;
+    }
+    .team-role {
+      font-size: 14px; color: #7c6af7; font-weight: 600; margin-bottom: 24px;
+    }
+    .team-bio {
+      font-size: 14px; color: #8888aa; line-height: 1.7; margin-bottom: 28px;
+    }
+    .team-skills {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+    }
+    .team-skill {
+      padding: 6px 14px;
+      border-radius: 99px;
+      background: rgba(124,106,247,0.08);
+      border: 1px solid rgba(124,106,247,0.15);
+      font-size: 12px; font-weight: 600; color: #b0a0ff;
+    }
+
+    /* ==================== SLIDE 8: КОНТАКТЫ (CTA) ==================== */
+    .slide-cta-bg {
+      background: radial-gradient(ellipse at 50% 50%, rgba(124,106,247,0.08) 0%, transparent 50%),
+                  radial-gradient(ellipse at 30% 80%, rgba(247,106,138,0.05) 0%, transparent 50%),
+                  #06060b;
+    }
+    .cta-content { text-align: center; }
+    .cta-headline {
+      font-size: clamp(36px, 5vw, 64px);
+      line-height: 1.12;
+      margin-bottom: 24px;
+    }
+    .cta-sub {
+      font-size: 17px; color: #8888aa; max-width: 550px; margin: 0 auto 48px; line-height: 1.6;
+    }
+    .cta-buttons {
+      display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 48px;
+    }
+    .cta-btn {
+      padding: 16px 36px;
+      border-radius: 14px;
+      font-size: 16px; font-weight: 700;
+      cursor: pointer; border: none;
+      transition: all 0.3s cubic-bezier(0.25,0.8,0.25,1);
+      display: inline-flex; align-items: center; gap: 10px;
+    }
+    .cta-btn-primary {
+      background: linear-gradient(135deg, #7c6af7, #f76a8a);
+      color: #fff;
+      box-shadow: 0 12px 36px rgba(124,106,247,0.35);
+    }
+    .cta-btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 48px rgba(124,106,247,0.5);
+    }
+    .cta-btn-secondary {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #e8e8f0;
+    }
+    .cta-btn-secondary:hover {
+      border-color: rgba(124,106,247,0.3);
+      background: rgba(124,106,247,0.06);
+    }
+    .cta-links {
+      display: flex; gap: 32px; justify-content: center; flex-wrap: wrap;
+    }
+    .cta-link {
+      font-size: 14px; color: #7777aa;
+      display: flex; align-items: center; gap: 8px;
+      transition: color 0.2s;
+    }
+    .cta-link:hover { color: #7c6af7; }
+    .cta-link-icon { font-size: 18px; }
+
+    /* ==================== АДАПТИВНОСТЬ ==================== */
+    @media (max-width: 900px) {
+      .slide { padding: 60px 28px; }
+      .problem-grid,
+      .solution-grid,
+      .business-grid { grid-template-columns: 1fr; gap: 40px; }
+      .product-showcase { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .slide-nav { right: 12px; }
+      .slide-number { left: 28px; }
+    }
+    @media (max-width: 600px) {
+      .slide { padding: 48px 20px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .team-card { padding: 32px 24px; }
+      .title-logo-icon { width: 48px; height: 48px; font-size: 24px; }
+      .title-logo-text { font-size: 28px; }
+    }
+
+    /* ==================== FOOTER ==================== */
+    .pitch-footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.15);
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- НАВИГАЦИЯ (ТОЧКИ СПРАВА) -->
+  <nav class="slide-nav" id="slide-nav">
+    <button class="slide-nav-dot active" data-slide="0" data-label="HabitFlow" onclick="goSlide(0)"></button>
+    <button class="slide-nav-dot" data-slide="1" data-label="Проблема" onclick="goSlide(1)"></button>
+    <button class="slide-nav-dot" data-slide="2" data-label="Решение" onclick="goSlide(2)"></button>
+    <button class="slide-nav-dot" data-slide="3" data-label="Продукт" onclick="goSlide(3)"></button>
+    <button class="slide-nav-dot" data-slide="4" data-label="Функции" onclick="goSlide(4)"></button>
+    <button class="slide-nav-dot" data-slide="5" data-label="Бизнес" onclick="goSlide(5)"></button>
+    <button class="slide-nav-dot" data-slide="6" data-label="Команда" onclick="goSlide(6)"></button>
+    <button class="slide-nav-dot" data-slide="7" data-label="Контакты" onclick="goSlide(7)"></button>
+  </nav>
+
+
+  <!-- ======================== SLIDE 1: ТИТУЛЬНАЯ ======================== -->
+  <section class="slide slide-title-bg" id="slide-0">
+    <div class="glow" style="width:600px;height:600px;background:#7c6af7;top:-150px;left:-150px;animation:float1 12s infinite"></div>
+    <div class="glow" style="width:400px;height:400px;background:#f76a8a;bottom:-100px;right:-100px;animation:float2 15s infinite"></div>
+    <div class="slide-inner title-content">
+      <div class="title-logo animate">
+        <div class="title-logo-icon">✦</div>
+        <span class="title-logo-text">HabitFlow</span>
+      </div>
+      <h1 class="title-headline animate delay-1">
+        Привычки, которые<br><span class="accent">меняют жизнь</span>
+      </h1>
+      <p class="title-sub animate delay-2">
+        Геймифицированная платформа для формирования полезных привычек с XP-системой прокачки, челленджами между друзьями и Telegram-ботом
+      </p>
+      <div class="title-tags animate delay-3">
+        <span class="title-tag">🎮 Геймификация</span>
+        <span class="title-tag">🤖 Telegram Bot</span>
+        <span class="title-tag">📱 Android APK</span>
+        <span class="title-tag">🌐 Веб-приложение</span>
+      </div>
+    </div>
+    <div class="slide-number">01 / 08</div>
+  </section>
+
+
+  <!-- ======================== SLIDE 2: ПРОБЛЕМА ======================== -->
+  <section class="slide slide-problem-bg" id="slide-1">
+    <div class="glow" style="width:500px;height:500px;background:#f76a8a;top:10%;right:-100px;animation:float1 14s infinite"></div>
+    <div class="slide-inner">
+      <div class="problem-grid">
+        <div>
+          <div class="section-label animate">
+            <span class="section-label-line"></span>
+            ПРОБЛЕМА
+          </div>
+          <h2 class="problem-headline animate delay-1">
+            92% людей <span class="red">бросают</span> новые привычки
+          </h2>
+          <p class="problem-desc animate delay-2">
+            Классические трекеры привычек скучны и не мотивируют. Пользователь теряет интерес в первые две недели, потому что нет немедленной обратной связи и ощущения прогресса.
+          </p>
+          <p class="problem-desc animate delay-3" style="margin-bottom: 0;">
+            Людям нужна <strong style="color:#f0f0f8">мотивация</strong>, <strong style="color:#f0f0f8">социальное давление</strong> и <strong style="color:#f0f0f8">видимый прогресс</strong> — то, что существующие решения не дают.
+          </p>
+        </div>
+        <div class="problem-stats">
+          <div class="stat-card animate delay-1">
+            <div class="stat-icon">📉</div>
+            <div>
+              <div class="stat-number">92%</div>
+              <div class="stat-label">людей бросают привычки в первый месяц</div>
+            </div>
+          </div>
+          <div class="stat-card animate delay-2">
+            <div class="stat-icon">😴</div>
+            <div>
+              <div class="stat-number">14 дней</div>
+              <div class="stat-label">средний срок жизни новой привычки</div>
+            </div>
+          </div>
+          <div class="stat-card animate delay-3">
+            <div class="stat-icon">🗑️</div>
+            <div>
+              <div class="stat-number">67%</div>
+              <div class="stat-label">пользователей удаляют обычный трекер привычек</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">02 / 08</div>
+  </section>
+
+
+  <!-- ======================== SLIDE 3: РЕШЕНИЕ ======================== -->
+  <section class="slide slide-solution-bg" id="slide-2">
+    <div class="glow" style="width:500px;height:500px;background:#6af7c8;bottom:-100px;left:-100px;animation:float2 16s infinite"></div>
+    <div class="slide-inner">
+      <div class="solution-grid">
+        <div>
+          <div class="section-label animate">
+            <span class="section-label-line" style="background:linear-gradient(90deg, #6af7c8, transparent)"></span>
+            РЕШЕНИЕ
+          </div>
+          <h2 class="solution-headline animate delay-1">
+            HabitFlow: привычки<br>как <span class="green">RPG-игра</span>
+          </h2>
+          <p class="solution-desc animate delay-2">
+            Мы превратили рутину формирования привычек в увлекательную игровую механику. Каждое выполнение привычки приносит очки опыта, повышает уровень и открывает достижения.
+          </p>
+          <div class="solution-points">
+            <div class="solution-point animate delay-2">
+              <div class="solution-point-icon">⚡</div>
+              <div class="solution-point-text">
+                <h4>Мгновенная обратная связь</h4>
+                <p>+10 XP за каждую привычку. Видишь прогресс в реальном времени.</p>
+              </div>
+            </div>
+            <div class="solution-point animate delay-3">
+              <div class="solution-point-icon">🤝</div>
+              <div class="solution-point-text">
+                <h4>Социальная мотивация</h4>
+                <p>Челленджи с друзьями, чаты и таблицы лидеров давят на амбиции.</p>
+              </div>
+            </div>
+            <div class="solution-point animate delay-4">
+              <div class="solution-point-icon">🤖</div>
+              <div class="solution-point-text">
+                <h4>Telegram-бот</h4>
+                <p>Контролируй привычки, не открывая приложение. Напоминания прямо в мессенджер.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Визуал интерфейса -->
+        <div class="solution-visual animate-right delay-2">
+          <div class="sv-header">
+            <div class="sv-dot" style="background:#f76a8a"></div>
+            <div class="sv-dot" style="background:#f7c46a"></div>
+            <div class="sv-dot" style="background:#6af7c8"></div>
+            <span style="font-size:12px;color:#55556a;margin-left:8px">HabitFlow — Дашборд</span>
+          </div>
+          <div class="sv-habit-row">
+            <span class="sv-emoji">💪</span>
+            <span class="sv-name">Тренировка</span>
+            <span style="font-size:11px;color:#6af7c8;font-weight:600">+15 XP</span>
+            <div class="sv-check done"></div>
+          </div>
+          <div class="sv-habit-row">
+            <span class="sv-emoji">📚</span>
+            <span class="sv-name">Чтение книг</span>
+            <span style="font-size:11px;color:#6af7c8;font-weight:600">+10 XP</span>
+            <div class="sv-check done"></div>
+          </div>
+          <div class="sv-habit-row">
+            <span class="sv-emoji">🧘</span>
+            <span class="sv-name">Медитация</span>
+            <span style="font-size:11px;color:#7777aa;font-weight:600">+10 XP</span>
+            <div class="sv-check"></div>
+          </div>
+          <div class="sv-habit-row">
+            <span class="sv-emoji">💧</span>
+            <span class="sv-name">Пить воду</span>
+            <span style="font-size:11px;color:#7777aa;font-weight:600">+5 XP</span>
+            <div class="sv-check"></div>
+          </div>
+          <div class="sv-xp-bar">
+            <span style="font-size:12px;color:#8888aa">Практик ⚡ Ур. 3</span>
+            <div class="sv-xp-track">
+              <div class="sv-xp-fill"></div>
+            </div>
+            <span class="sv-xp-text">580 XP</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">03 / 08</div>
+  </section>
+
+
+  <!-- ======================== SLIDE 4: ПРОДУКТ ======================== -->
+  <section class="slide slide-product-bg" id="slide-3">
+    <div class="glow" style="width:500px;height:500px;background:#7c6af7;top:50%;left:50%;transform:translate(-50%,-50%);animation:float1 18s infinite"></div>
+    <div class="slide-inner">
+      <div class="section-label animate" style="justify-content:center">
+        <span class="section-label-line"></span>
+        ПРОДУКТ
+      </div>
+      <h2 class="product-headline animate delay-1">Три экрана, один опыт</h2>
+      <p class="product-sub animate delay-2">Веб-приложение, Android APK и Telegram-бот — единая экосистема для формирования привычек</p>
+
+      <div class="product-showcase">
+        <!-- Экран 1: Трекер привычек -->
+        <div class="product-screen animate delay-1">
+          <div class="product-screen-bar">
+            <div class="ps-dot" style="background:#f76a8a"></div>
+            <div class="ps-dot" style="background:#f7c46a"></div>
+            <div class="ps-dot" style="background:#6af7c8"></div>
+          </div>
+          <div class="product-screen-body">
+            <div class="product-screen-title">📋 Трекер привычек</div>
+            <div class="mini-habit">
+              <span class="mini-habit-emoji">💪</span>
+              <span class="mini-habit-name">Тренировка</span>
+              <div class="mini-check"></div>
+            </div>
+            <div class="mini-habit">
+              <span class="mini-habit-emoji">📚</span>
+              <span class="mini-habit-name">Чтение</span>
+              <div class="mini-check"></div>
+            </div>
+            <div class="mini-habit">
+              <span class="mini-habit-emoji">🧘</span>
+              <span class="mini-habit-name">Медитация</span>
+              <div class="mini-check empty"></div>
+            </div>
+            <div class="mini-habit">
+              <span class="mini-habit-emoji">💧</span>
+              <span class="mini-habit-name">Вода</span>
+              <div class="mini-check empty"></div>
+            </div>
+            <div style="margin-top:14px;font-size:11px;color:#8888aa">Выполнено: 2 / 4 · Стрик: 7 дней 🔥</div>
+            <div class="mini-bar" style="margin-top:8px">
+              <div class="mini-bar-fill" style="width:50%;background:linear-gradient(90deg,#7c6af7,#6af7c8)"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Экран 2: Чаты и группы -->
+        <div class="product-screen animate delay-2">
+          <div class="product-screen-bar">
+            <div class="ps-dot" style="background:#f76a8a"></div>
+            <div class="ps-dot" style="background:#f7c46a"></div>
+            <div class="ps-dot" style="background:#6af7c8"></div>
+          </div>
+          <div class="product-screen-body" style="display:flex;flex-direction:column;gap:8px">
+            <div class="product-screen-title">💬 Чаты и челленджи</div>
+            <div class="mini-msg incoming">47 дней подряд! 🔥</div>
+            <div class="mini-msg outgoing">Огонь! Я на 23 днях 💪</div>
+            <div class="mini-msg incoming">Держись, скоро обгоню 😄</div>
+            <div style="margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,0.04)">
+              <div style="font-size:11px;font-weight:700;color:#f7c46a;margin-bottom:8px">🏆 Челлендж: 30 дней без сахара</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#8888aa">
+                <span>🥇 Нодирбек 87%</span>
+                <span>🥈 Азиз 73%</span>
+                <span>🥉 Sardarbek 60%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Экран 3: XP и уровни -->
+        <div class="product-screen animate delay-3">
+          <div class="product-screen-bar">
+            <div class="ps-dot" style="background:#f76a8a"></div>
+            <div class="ps-dot" style="background:#f7c46a"></div>
+            <div class="ps-dot" style="background:#6af7c8"></div>
+          </div>
+          <div class="product-screen-body">
+            <div class="product-screen-title">⚡ Прокачка и достижения</div>
+            <div class="mini-level-row">
+              <span class="mini-level-icon">🌱</span>
+              <span class="mini-level-name">Новичок</span>
+              <span class="mini-level-badge" style="background:rgba(106,247,200,0.1);color:#6af7c8">Пройден</span>
+            </div>
+            <div class="mini-level-row">
+              <span class="mini-level-icon">📖</span>
+              <span class="mini-level-name">Ученик</span>
+              <span class="mini-level-badge" style="background:rgba(106,247,200,0.1);color:#6af7c8">Пройден</span>
+            </div>
+            <div class="mini-level-row" style="color:#7c6af7">
+              <span class="mini-level-icon">⚡</span>
+              <span class="mini-level-name" style="font-weight:700">Практик</span>
+              <span class="mini-level-badge" style="background:rgba(124,106,247,0.15);color:#7c6af7">Текущий</span>
+            </div>
+            <div class="mini-level-row" style="opacity:0.4">
+              <span class="mini-level-icon">🔥</span>
+              <span class="mini-level-name">Мастер</span>
+              <span class="mini-level-badge" style="background:rgba(255,255,255,0.04);color:#55556a">🔒</span>
+            </div>
+            <div class="mini-level-row" style="opacity:0.25">
+              <span class="mini-level-icon">👑</span>
+              <span class="mini-level-name">Легенда</span>
+              <span class="mini-level-badge" style="background:rgba(255,255,255,0.04);color:#55556a">🔒</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">04 / 08</div>
+  </section>
+
+
+  <!-- ======================== SLIDE 5: ФУНКЦИИ ======================== -->
+  <section class="slide slide-features-bg" id="slide-4">
+    <div class="glow" style="width:400px;height:400px;background:#f7c46a;top:20%;right:-50px;animation:float1 14s infinite"></div>
+    <div class="slide-inner">
+      <div class="section-label animate" style="justify-content:center">
+        <span class="section-label-line" style="background:linear-gradient(90deg,#f7c46a,transparent)"></span>
+        КЛЮЧЕВЫЕ ФУНКЦИИ
+      </div>
+      <h2 class="features-headline animate delay-1">Полная экосистема <span style="background:linear-gradient(135deg,#7c6af7,#f76a8a);-webkit-background-clip:text;-webkit-text-fill-color:transparent">в одном продукте</span></h2>
+
+      <div class="features-grid">
+        <div class="feat-card animate delay-1" style="--feat-accent:linear-gradient(90deg,#7c6af7,#6af7c8)">
+          <span class="feat-icon">✦</span>
+          <h3>До 10 привычек + подпривычки</h3>
+          <p>Каждая привычка имеет emoji, цвет и до 5 подпривычек для детального контроля прогресса.</p>
+        </div>
+        <div class="feat-card animate delay-1" style="--feat-accent:linear-gradient(90deg,#f76a8a,#f7c46a)">
+          <span class="feat-icon">🏆</span>
+          <h3>XP, уровни и 15 достижений</h3>
+          <p>Система прокачки от Новичка до Легенды. 15 уникальных бейджей мотивируют продолжать.</p>
+        </div>
+        <div class="feat-card animate delay-2" style="--feat-accent:linear-gradient(90deg,#6af7c8,#7c6af7)">
+          <span class="feat-icon">⚔️</span>
+          <h3>Челленджи и лидерборды</h3>
+          <p>Создавайте приватные и публичные соревнования с друзьями по инвайт-ссылке.</p>
+        </div>
+        <div class="feat-card animate delay-2" style="--feat-accent:linear-gradient(90deg,#7c6af7,#f76a8a)">
+          <span class="feat-icon">💬</span>
+          <h3>Чаты, группы и онлайн-статус</h3>
+          <p>Личные и групповые чаты с фото, emoji и статусами присутствия в реальном времени.</p>
+        </div>
+        <div class="feat-card animate delay-3" style="--feat-accent:linear-gradient(90deg,#f7c46a,#f76a8a)">
+          <span class="feat-icon">📊</span>
+          <h3>Аналитика и тепловая карта</h3>
+          <p>Тепловая карта года, корреляции привычек, экспорт статистики в PNG для отчётов.</p>
+        </div>
+        <div class="feat-card animate delay-3" style="--feat-accent:linear-gradient(90deg,#6af7c8,#f7c46a)">
+          <span class="feat-icon">🤖</span>
+          <h3>Telegram-бот @habit_flowbot</h3>
+          <p>Просмотр привычек, напоминания, апелляции серий и социальные функции прямо в мессенджере.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">05 / 08</div>
+  </section>
+
+
+  <!-- ======================== SLIDE 6: БИЗНЕС-МОДЕЛЬ ======================== -->
+  <section class="slide slide-business-bg" id="slide-5">
+    <div class="glow" style="width:500px;height:500px;background:#7c6af7;bottom:-100px;left:30%;animation:float2 16s infinite"></div>
+    <div class="slide-inner">
+      <div class="business-grid">
+        <div>
+          <div class="section-label animate">
+            <span class="section-label-line"></span>
+            БИЗНЕС-МОДЕЛЬ
+          </div>
+          <h2 class="business-headline animate delay-1">
+            Стратегия <span style="background:linear-gradient(135deg,#7c6af7,#6af7c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent">монетизации</span>
+          </h2>
+          <p class="business-desc animate delay-2">
+            Сейчас HabitFlow полностью бесплатен — наша цель на этом этапе: набрать базу активных пользователей и проверить вовлечённость. Монетизация включается на следующих фазах.
+          </p>
+          <div class="business-model-cards">
+            <div class="bm-card animate delay-2">
+              <div class="bm-phase">1</div>
+              <div>
+                <h4>Сейчас: Рост базы пользователей</h4>
+                <p>Полный бесплатный доступ. Органический рост через Telegram-бота и инвайт-ссылки челленджей.</p>
+              </div>
+            </div>
+            <div class="bm-card animate delay-3">
+              <div class="bm-phase">2</div>
+              <div>
+                <h4>Freemium-модель</h4>
+                <p>Премиум-функции: неограниченные привычки, расширенная аналитика, кастомные темы и AI-рекомендации.</p>
+              </div>
+            </div>
+            <div class="bm-card animate delay-4">
+              <div class="bm-phase">3</div>
+              <div>
+                <h4>B2B: Корпоративный wellness</h4>
+                <p>Корпоративные лицензии для компаний: формирование привычек сотрудников, командные челленджи, HR-дашборды.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Визуал метрик -->
+        <div class="metrics-visual animate-right delay-2">
+          <h3>Текущие метрики</h3>
+          <div class="metric-row">
+            <span class="metric-label">Стек технологий</span>
+            <span class="metric-value">React + Firebase</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Платформы</span>
+            <span class="metric-value">Web + APK + Bot</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Уникальных функций</span>
+            <span class="metric-value">15+</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Время разработки</span>
+            <span class="metric-value">Solo-dev</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Стоимость запуска</span>
+            <span class="metric-value">$0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">06 / 08</div>
+  </section>
+
+
+  <!-- ======================== SLIDE 7: КОМАНДА ======================== -->
+  <section class="slide slide-team-bg" id="slide-6">
+    <div class="glow" style="width:400px;height:400px;background:#7c6af7;top:30%;left:50%;transform:translateX(-50%);animation:float1 16s infinite"></div>
+    <div class="slide-inner team-content">
+      <div class="section-label animate" style="justify-content:center">
+        <span class="section-label-line"></span>
+        КОМАНДА
+      </div>
+      <h2 class="team-headline animate delay-1">За проектом стоит</h2>
+      <p class="team-sub animate delay-2">Один человек, одна миссия — помочь людям стать лучше</p>
+
+      <div class="team-card animate delay-3">
+        <div class="team-avatar">👨‍💻</div>
+        <h3 class="team-name">Нодирбек Камалов</h3>
+        <div class="team-role">Основатель · Full-Stack Разработчик</div>
+        <p class="team-bio">
+          Разработал полную экосистему HabitFlow с нуля: веб-приложение на React + Firebase, Android APK, Telegram-бота и презентационный сайт. Увлечён идеей геймификации повседневных привычек для повышения продуктивности.
+        </p>
+        <div class="team-skills">
+          <span class="team-skill">React</span>
+          <span class="team-skill">Firebase</span>
+          <span class="team-skill">JavaScript</span>
+          <span class="team-skill">Node.js</span>
+          <span class="team-skill">Telegram API</span>
+          <span class="team-skill">UI/UX</span>
+        </div>
+      </div>
+    </div>
+    <div class="slide-number">07 / 08</div>
+  </section>
+
+
+  <!-- ======================== SLIDE 8: КОНТАКТЫ (CTA) ======================== -->
+  <section class="slide slide-cta-bg" id="slide-7">
+    <div class="glow" style="width:600px;height:600px;background:#7c6af7;top:50%;left:50%;transform:translate(-50%,-50%);animation:float1 12s infinite"></div>
+    <div class="glow" style="width:400px;height:400px;background:#f76a8a;bottom:-100px;left:-100px;animation:float2 14s infinite"></div>
+    <div class="slide-inner cta-content">
+      <div class="section-label animate" style="justify-content:center">
+        <span class="section-label-line"></span>
+        ПОПРОБУЙТЕ СЕЙЧАС
+      </div>
+      <h2 class="cta-headline animate delay-1">
+        Готовы начать<br><span style="background:linear-gradient(135deg,#7c6af7,#f76a8a);-webkit-background-clip:text;-webkit-text-fill-color:transparent">формировать привычки?</span>
+      </h2>
+      <p class="cta-sub animate delay-2">
+        HabitFlow уже работает и ждёт вас. Зарегистрируйтесь бесплатно, подключите Telegram-бота и начните набирать XP прямо сегодня.
+      </p>
+      <div class="cta-buttons animate delay-3">
+        <a href="https://replikox2011.github.io/habitflow" target="_blank" class="cta-btn cta-btn-primary">Открыть HabitFlow →</a>
+        <a href="https://t.me/habit_flowbot" target="_blank" class="cta-btn cta-btn-secondary">🤖 Telegram Bot</a>
+      </div>
+      <div class="cta-links animate delay-4">
+        <a href="https://t.me/habit_flowbot" target="_blank" class="cta-link">
+          <span class="cta-link-icon">💬</span>
+          @habit_flowbot
+        </a>
+        <a href="https://github.com/replikox2011/habit-tracker" target="_blank" class="cta-link">
+          <span class="cta-link-icon">📦</span>
+          GitHub Репозиторий
+        </a>
+        <a href="https://replikox2011.github.io/habitflow" target="_blank" class="cta-link">
+          <span class="cta-link-icon">🌐</span>
+          habitflow web
+        </a>
+      </div>
+    </div>
+    <div class="slide-number">08 / 08</div>
+  </section>
+
+
+  <!-- FOOTER -->
+  <div class="pitch-footer">
+    © 2026 HabitFlow · Нодирбек Камалов · Все права защищены
+  </div>
+
+
+  <!-- ==================== JAVASCRIPT ==================== -->
+  <script>
+    // ===== Навигация по слайдам =====
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.slide-nav-dot');
+
+    function goSlide(index) {
+      slides[index].scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Обновление активной точки при скролле
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          const index = parseInt(id.split('-')[1]);
+          dots.forEach(d => d.classList.remove('active'));
+          dots[index].classList.add('active');
+
+          // Анимация элементов при появлении слайда
+          entry.target.querySelectorAll('.animate, .animate-left, .animate-right').forEach(el => {
+            el.style.animationPlayState = 'running';
+          });
+        }
+      });
+    }, { threshold: 0.4 });
+
+    slides.forEach(slide => observer.observe(slide));
+
+    // ===== Навигация клавиатурой =====
+    let currentSlide = 0;
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        currentSlide = Math.min(currentSlide + 1, slides.length - 1);
+        goSlide(currentSlide);
+      } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+        e.preventDefault();
+        currentSlide = Math.max(currentSlide - 1, 0);
+        goSlide(currentSlide);
+      }
+    });
+
+    // Обновление currentSlide при скролле
+    const slideObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          currentSlide = parseInt(entry.target.id.split('-')[1]);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    slides.forEach(slide => slideObserver.observe(slide));
+  </script>
+</body>
+</html>
